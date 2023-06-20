@@ -1,6 +1,7 @@
 import re
 import scrapy
 
+from DiveSiteScraping.items import AquanautDiveClubItems
 
 class MlssaSpider(scrapy.Spider):
     name = "mlssa"
@@ -15,10 +16,15 @@ class MlssaSpider(scrapy.Spider):
 
             yield response.follow(url = url, 
                                   callback = self.parse_club_page,
-                                  errback = self.errorback)
-                                #   meta={'location': dive_clubs_table[i].css('td ::text')[1].get()})
+                                  errback = self.errorback,
+                                  meta={
+                                      'club_name': dive_clubs_table[i].css('td ::text')[0].get(),
+                                      'location': dive_clubs_table[i].css('td ::text')[1].get()
+                                      })
 
     def parse_club_page(self, response):
+
+        club_items = AquanautDiveClubItems()
         
         email = None
 
@@ -34,12 +40,26 @@ class MlssaSpider(scrapy.Spider):
                 if len(email) > 0:
                     break
 
-        yield{
-            'url': response.url,
-            'email': email,
-            # 'location': response.meta.get('location')
-        }
+        if email is not None:
+            if len(email) > 0:
+                email = email[0]
+            if len(email) == 0:
+                email = None
 
-    def errorback(self, response):
-        self.logger.error('DNSLookupError on %s', response.url)
+        club_items['url'] = response.url
+        club_items['tag'] = None
+        club_items['date'] = None
+        club_items['club_name'] = response.meta.get('club_name')
+        club_items['building'] = None
+        club_items['city'] = response.meta.get('location')
+        club_items['country'] = 'Australia'
+        club_items['club_url'] = response.url
+        club_items['contact'] = None
+        club_items['phone'] = None
+        club_items['email'] = email
+
+        yield club_items
+
+    def errorback(self, failure):
+        self.logger.error('DNSLookupError on %s', failure.url)
 
