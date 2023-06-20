@@ -18,7 +18,7 @@ class DivesitescrapingPipeline:
 
         for col in cols:
             value = adapter.get(col)
-            if value is not None and ':' in value:
-                adapter[col] = value.split(':')[1].strip()
+            if type(value) == str and ':' in value:
+                    adapter[col] = value.split(':')[1].strip()
 
         return item
