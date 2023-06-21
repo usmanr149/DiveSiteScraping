@@ -1,6 +1,8 @@
 import scrapy
 import time
 
+from DiveSiteScraping.items import AquanautDiveClubItems
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -10,6 +12,9 @@ class DiveNiSpider(scrapy.Spider):
     start_urls = ["https://www.dive-ni.com/dive-clubs/"]
 
     def parse(self, response):
+        
+        club_items = AquanautDiveClubItems()
+
         driver = webdriver.Chrome()
 
         driver.get(response.url)
@@ -32,12 +37,17 @@ class DiveNiSpider(scrapy.Spider):
             email = box.find_elements(By.CLASS_NAME, "clubs_email")[0].text
             club_url = box.find_elements(By.CSS_SELECTOR, ".clubs_link a")[0].get_attribute('href')
 
-            yield{
-                'club_name': club_name,
-                'country': country,
-                'city': city,
-                'phone': phone,
-                'email': email,
-                'club_url': club_url
-            }
+            club_items['url'] = response.url
+            club_items['tag'] = None
+            club_items['date'] = None
+            club_items['club_name'] = club_name
+            club_items['building'] = None
+            club_items['city'] = city
+            club_items['country'] = country
+            club_items['club_url'] = club_url
+            club_items['contact'] = None
+            club_items['phone'] = phone
+            club_items['email'] = email
+
+            yield club_items
 
